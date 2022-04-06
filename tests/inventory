@@ -1,0 +1,8 @@
+[lab]
+centos7-lab
+alma8-lab
+rocky8-lab
+debian11-lab
+
+[hypervisor]
+neptune

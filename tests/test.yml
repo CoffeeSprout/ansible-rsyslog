@@ -1,0 +1,22 @@
+---
+- hosts: lab
+  become: True
+  roles:
+    - role: coffeesprout.rsyslog
+
+- hosts: lab
+  become: True
+  roles:
+  - role: coffeesprout.rsyslog
+    logrotate_period: "daily"
+    logrotate_keep: "28"
+    logrotate_maxsize: "maxsize 100M"
+    logrotate_files:
+    - name: somename
+      paths:
+      - /var/log/syslog
+      - /var/log/mail.warn
+      options:
+      - "missingok"
+      - "monthly"
+      - "create 0664 root utmp"

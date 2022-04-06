@@ -1,12 +1,15 @@
-bvansomeren.rsyslog
+coffeesprout.rsyslog
 =========
 
-Installs rsyslog. Optionally with TLS.
+Installs rsyslog.
+Sets Logrotate
+
+Both are essentially the same on RHEL and Debian
 
 Requirements
 ------------
 
-None; Current implementation might be CentOS specific but should be easy to adjust for other `rsyslog` based systems
+No other roles, tested on Rhel based systems (7 and 8) and Debian 11
 
 Role Variables
 --------------
@@ -19,29 +22,35 @@ Here are some of the included defaults:
 
 Enables TLS and will include dependencies (gnu-tls)
 
-	rsyslog_hostname: localhost
-
-The host that all logging should be forwarded to
-
-	rsyslog_port: 514
-
-The port that all logging should be forwarded to
-
-	rsyslog_conf: []
-
-A dict with all the "name" and "config" values you want to add to rsyslog.conf
-
-	rsyslog_ca_url:
+	rsyslog\_ca\_url:
 
 Optional URL to download the CA cert from for TLS support
 
-	rsyslog_ca_file: "/etc/rsyslog-ca.pem"
+	rsyslog\_ca\_file: "/etc/rsyslog-ca.pem"
 
 Optional name and location where to store the downloaded CA cert
 
-	rsyslog_ca_hash:
+	rsyslog\_ca\_hash:
 
 Optional checksum of type <algorithm>:<checksum>  
+
+  rsyslogd\_files:
+
+Used to generate files in /etc/rsyslog.d/
+The name is applied to the filename and the list of options is a set of strings that will be written inside the file
+
+Example
+   - name: central\_logserver\_r\_us
+     options:
+     - "$ModLoad imudp.so"
+     - "$UDPServerRun 514"
+   - name: remote
+     options:
+     - "*.* @loghost.example.com"
+
+  logrotate\_default\_options:
+
+The default options in /etc/logrotate.conf; We stick with pretty much the default options in RHEL and Debian, but enable compression and cap file size at 100M (Which would generally yield 10M compressed files using gzip)
 
 Dependencies
 ------------
@@ -50,51 +59,32 @@ Dependencies
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
     - hosts: servers
       roles:
-         - { role: bvansomeren.rsyslog }
-      vars:
-	 rsyslog_enable_tls: yes
-	 rsyslog_host: logs.papertrailapp.com
-	 rsyslog_port: ****
-	 rsyslog_ca_url: "https://papertrailapp.com/tools/papertrail-bundle.pem"
-	 rsyslog_ca_file: "/etc/papertrail-bundle.pem"
-	 rsyslog_ca_hash: "md5:c75ce425e553e416bde4e412439e3d09"
-	 rsyslog_conf:
-	 - name: "$ActionSendStreamDriver"
-	   config: "gtls"
-	 - name: "$ActionSendStreamDriverMode"
-	   config: "1"
-	 - name: "$ActionSendStreamDriverAuthMode"
-	   config: "x509/name"
-	 - name: "$ActionSendStreamDriverPermittedPeer"
-	   config: "*.papertrailapp.com"
-	 - name: "$ActionResumeInterval"
-	   config: "10"
-	 - name: "$ActionQueueSize" 
-	   config: "100000"
-	 - name: "$ActionQueueDiscardMark" 
-	   config: "97500"
-	 - name: "$ActionQueueHighWaterMark" 
-	   config: "80000"
-	 - name: "$ActionQueueType" 
-	   config: "LinkedList"
-	 - name: "$ActionQueueFileName" 
-	   config: "papertrailqueue"
-	 - name: "$ActionQueueCheckpointInterval" 
-	   config: "100"
-	 - name: "$ActionQueueMaxDiskSpace"
-	   config: "2g"
-	 - name: "$ActionResumeRetryCount"
-	   config: "-1"
-	 - name: "$ActionQueueSaveOnShutdown"
-	   config: "on"
-	 - name: "$ActionQueueTimeoutEnqueue" 
-	   config: "10"
-	 - name: "$ActionQueueDiscardSeverity"
-	   config: "0"
+      - role: coffeesprout.rsyslog
+        rsyslogd_files:
+        - name: papertrail
+          options:
+          - "$ActionSendStreamDriver gtls"
+          - "$ActionSendStreamDriverMode 1"
+          - "$ActionSendStreamDriverAuthMode x509/name"
+          - "$ActionSendStreamDriverPermittedPeer *.papertrailapp.com"
+          - "$ActionResumeInterval 10"
+          - "$ActionQueueSize 100000"
+          - "$ActionQueueDiscardMark 97500"
+          - "$ActionQueueHighWaterMark 80000"
+          - "$ActionQueueType LinkedList"
+          - "$ActionQueueFileName papertrailqueue"
+          - "$ActionQueueCheckpointInterval 100"
+          - "$ActionQueueMaxDiskSpace 2g"
+          - "$ActionResumeRetryCount -1"
+          - "$ActionQueueSaveOnShutdown on"
+          - "$ActionQueueTimeoutEnqueue 10" 
+          - "$ActionQueueDiscardSeverity 0"
+          - "*.* @@logs.papertrailapp.com"
+	      rsyslog_ca_url: "https://papertrailapp.com/tools/papertrail-bundle.pem"
+	      rsyslog_ca_file: "/etc/papertrail-bundle.pem"
+	      rsyslog_ca_hash: "md5:c75ce425e553e416bde4e412439e3d09"
 	 
 
 License

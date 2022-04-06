@@ -1,13 +1,35 @@
 ---
 # defaults file for syslog
 #
-rsyslog_hostname: localhost
-rsyslog_port: 514
-
-rsyslog_ca_url: 
-rsyslog_ca_file: "/etc/rsyslog-ca.pem"
-rsyslog_ca_hash:
 
 rsyslog_packages:
 - rsyslog
 - rsyslog-gnutls
+
+logrotate_default_options:
+- "{{ logrotate_period | default('weekly') }}"
+- "rotate {{ logrotate_keep | default('4') }}"
+- "create"
+- "dateext"
+- "maxsize {{ logrotate_maxsize | default('100M') }}"
+- "{{ logrotate_compress | default('compress') }}"
+- "include /etc/logrotate.d"
+
+rsyslogd_files: []
+# - name: central_logserver_r_us
+#   options:
+#   - "$ModLoad imudp.so"
+#   - "$UDPServerRun 514"
+# - name: remote
+#   options:
+#   - "*.* @loghost.example.com"
+
+logrotate_files: []
+# - name: somename
+#   paths:
+#   - /var/log/syslog
+#   - /var/log/mail.warn
+#   options:
+#   - "missingok"
+#   - "monthly"
+#   - "create 0664 root utmp"

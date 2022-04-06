@@ -1,15 +1,34 @@
 ---
-# tasks file for syslog
+# tasks file for coffeesprout.rsyslog
+
 - name: ensure packages are installed
-  package: name="{{ item }}" state=present
-  with_items: "{{ rsyslog_packages }}"
-  notify: reload rsyslog
+  package:
+    name: "{{ item }}" 
+    state: present
+  with_items:
+  - "{{ rsyslog_packages }}"
 
 - name: optionally ensure the CA file is loaded
-  get_url: dest="{{ rsyslog_ca_file }}" url="{{ rsyslog_ca_url }}" checksum="{{ rsyslog_ca_hash }}" owner=root mode=0400
-  when: rsyslog_ca_url is defined
+  get_url:
+    dest: "{{ rsyslog_ca_file }}" 
+    url: "{{ rsyslog_ca_url }}" 
+    checksum: "{{ rsyslog_ca_hash }}" 
+    owner: root
+    mode: '0400'
+  when: "rsyslog_ca_url is defined"
 
-- name: ensure rsyslog.conf is updated
-  template: dest=/etc/rsyslog.conf src=rsyslog-{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.conf  backup=yes
-  with_items: "{{ rsyslog_conf }}"
-  notify: reload rsyslog
+- name: setup additional rsyslog.d stanza's
+  template:
+    src: rsyslog.d.j2
+    dest: "/etc/rsyslog.d/{{ item.name }}.conf"
+    mode: '0644'
+    owner: root
+  with_items: "{{ rsyslogd_files }}"
+
+#Setup logrotate
+
+- include_tasks:
+    file: logrotate.yml
+    apply:
+      tags:
+      - logrotate

@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# see "man logrotate" for details
+
+#Managed options from "logrotate_options"
+
+{% for option in logrotate_default_options %}
+{{ option }}
+{% endfor %}
+
+# system-specific logs may be also be configured here.
