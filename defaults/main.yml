@@ -15,6 +15,8 @@ logrotate_default_options:
 - "{{ logrotate_compress | default('compress') }}"
 - "include /etc/logrotate.d"
 
+logrotate_hourly: False
+
 rsyslogd_files: []
 # - name: central_logserver_r_us
 #   options:

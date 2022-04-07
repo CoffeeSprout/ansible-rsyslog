@@ -5,6 +5,16 @@
     name: logrotate
     state: present
 
+# See also: https://stackoverflow.com/questions/25485047/hourly-rotation-of-files-using-logrotate
+- name: ensure logrotate runs hourly rather than daily if requested
+  file:
+    src: /etc/cron.daily/logrotate
+    dest: /etc/cron.hourly/logrotate
+    owner: root
+    group: root
+    state: link
+  when: "logrotate_hourly"
+
 - name: ensure default configuration
   template:
     src: logrotate.conf.j2
